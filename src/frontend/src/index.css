@@ -1,0 +1,135 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  src: url("/assets/fonts/PlusJakartaSans.woff2") format("woff2");
+  font-weight: 200 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer base {
+  :root {
+    --radius: 0.75rem;
+    /* Dark blue/charcoal dark theme only */
+    --background: 0.118 0.024 220;
+    --foreground: 0.965 0.006 220;
+    --card: 0.155 0.022 215;
+    --card-foreground: 0.965 0.006 220;
+    --popover: 0.185 0.024 215;
+    --popover-foreground: 0.965 0.006 220;
+    --primary: 0.748 0.115 75;
+    --primary-foreground: 0.155 0.022 215;
+    --secondary: 0.185 0.024 215;
+    --secondary-foreground: 0.965 0.006 220;
+    --muted: 0.185 0.024 215;
+    --muted-foreground: 0.73 0.018 215;
+    --accent: 0.27 0.022 215;
+    --accent-foreground: 0.965 0.006 220;
+    --destructive: 0.577 0.245 27.325;
+    --destructive-foreground: 0.985 0 0;
+    --border: 0.27 0.022 215;
+    --input: 0.27 0.022 215;
+    --ring: 0.748 0.115 75;
+    --success: 0.66 0.15 150;
+    --gold: 0.748 0.115 75;
+    --gold-hover: 0.68 0.11 75;
+    --chart-1: 0.748 0.115 75;
+    --chart-2: 0.66 0.15 150;
+    --chart-3: 0.6 0.12 200;
+    --chart-4: 0.7 0.18 30;
+    --chart-5: 0.65 0.2 280;
+    --sidebar: 0.155 0.022 215;
+    --sidebar-foreground: 0.965 0.006 220;
+    --sidebar-primary: 0.748 0.115 75;
+    --sidebar-primary-foreground: 0.155 0.022 215;
+    --sidebar-accent: 0.185 0.024 215;
+    --sidebar-accent-foreground: 0.965 0.006 220;
+    --sidebar-border: 0.27 0.022 215;
+    --sidebar-ring: 0.748 0.115 75;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+    background: radial-gradient(
+      ellipse at top left,
+      oklch(0.15 0.03 215) 0%,
+      oklch(0.118 0.024 220) 50%,
+      oklch(0.1 0.02 220) 100%
+    );
+    min-height: 100vh;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: oklch(var(--card));
+}
+::-webkit-scrollbar-thumb {
+  background: oklch(var(--border));
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(var(--primary));
+}
+
+/* Gold glow effect */
+.gold-glow {
+  box-shadow: 0 0 20px oklch(0.748 0.115 75 / 0.3);
+}
+
+/* Card highlight */
+.card-highlight {
+  background: linear-gradient(
+    to bottom,
+    oklch(0.22 0.025 215),
+    oklch(0.17 0.022 215)
+  );
+  border-top: 1px solid oklch(0.32 0.02 215);
+}
+
+/* Reading progress bar */
+.progress-gold {
+  background: linear-gradient(
+    to right,
+    oklch(0.748 0.115 75),
+    oklch(0.8 0.12 80)
+  );
+}
+
+@keyframes pulse-gold {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 oklch(0.748 0.115 75 / 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px oklch(0.748 0.115 75 / 0);
+  }
+}
+.pulse-gold {
+  animation: pulse-gold 2s infinite;
+}
+
+@keyframes timer-ring {
+  from {
+    stroke-dashoffset: 283;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
