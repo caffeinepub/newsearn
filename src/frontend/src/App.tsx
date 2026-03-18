@@ -46,9 +46,11 @@ function AdminSetupDialog() {
   const handleClaim = () => {
     mutate(secret, {
       onSuccess: () => {
-        toast.success("Admin access granted!");
+        toast.success("Admin access granted! Reloading...");
         setOpen(false);
         setSecret("");
+        // Reload so the admin tab appears immediately
+        setTimeout(() => window.location.reload(), 800);
       },
       onError: () => {
         toast.error("Invalid token or admin already assigned");

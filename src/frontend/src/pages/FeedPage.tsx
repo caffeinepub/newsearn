@@ -1,6 +1,13 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import {
   AlertCircle,
@@ -9,6 +16,7 @@ import {
   Clock,
   Coins,
   Copy,
+  History,
   TrendingUp,
   Wallet,
 } from "lucide-react";
@@ -32,6 +40,23 @@ interface FeedPageProps {
   onReadArticle: (article: Article) => void;
 }
 
+function statusBadgeClass(status: string) {
+  if (status === Variant_pending_approved_rejected.approved)
+    return "bg-green-100 text-green-700 border-green-200";
+  if (status === Variant_pending_approved_rejected.rejected)
+    return "bg-red-100 text-red-700 border-red-200";
+  return "bg-blue-100 text-blue-700 border-blue-200";
+}
+
+function formatDate(ts: bigint | number) {
+  const ms = typeof ts === "bigint" ? Number(ts) / 1_000_000 : ts;
+  return new Date(ms).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 export function FeedPage({ onReadArticle }: FeedPageProps) {
   const [copied, setCopied] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState("");
@@ -39,6 +64,7 @@ export function FeedPage({ onReadArticle }: FeedPageProps) {
   const [bankAccountNumber, setBankAccountNumber] = useState("");
   const [ifscCode, setIfscCode] = useState("");
   const [upiId, setUpiId] = useState("");
+  const [showHistory, setShowHistory] = useState(false);
   const { data: stats } = useUserStats();
   const { data: newsData, isLoading: newsLoading } = useGetNews(0);
   const { data: withdrawals } = useMyWithdrawals();
@@ -296,7 +322,7 @@ export function FeedPage({ onReadArticle }: FeedPageProps) {
               value={bankAccountName}
               onChange={(e) => setBankAccountName(e.target.value)}
               placeholder="Account Holder Name *"
-              className="w-full bg-accent/50 border border-border/50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary/50 text-foreground placeholder:text-muted-foreground"
+              className="mt-2 w-full bg-accent/50 border border-border/50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary/50 text-foreground placeholder:text-muted-foreground"
               data-ocid="feed.input"
             />
             <input
@@ -304,7 +330,7 @@ export function FeedPage({ onReadArticle }: FeedPageProps) {
               value={bankAccountNumber}
               onChange={(e) => setBankAccountNumber(e.target.value)}
               placeholder="Bank Account Number *"
-              className="w-full bg-accent/50 border border-border/50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary/50 text-foreground placeholder:text-muted-foreground"
+              className="mt-2 w-full bg-accent/50 border border-border/50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary/50 text-foreground placeholder:text-muted-foreground"
               data-ocid="feed.input"
             />
             <input
@@ -312,7 +338,7 @@ export function FeedPage({ onReadArticle }: FeedPageProps) {
               value={ifscCode}
               onChange={(e) => setIfscCode(e.target.value)}
               placeholder="IFSC Code *"
-              className="w-full bg-accent/50 border border-border/50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary/50 text-foreground placeholder:text-muted-foreground"
+              className="mt-2 w-full bg-accent/50 border border-border/50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary/50 text-foreground placeholder:text-muted-foreground"
               data-ocid="feed.input"
             />
             <input
@@ -320,10 +346,10 @@ export function FeedPage({ onReadArticle }: FeedPageProps) {
               value={upiId}
               onChange={(e) => setUpiId(e.target.value)}
               placeholder="UPI ID (optional)"
-              className="w-full bg-accent/50 border border-border/50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary/50 text-foreground placeholder:text-muted-foreground"
+              className="mt-2 w-full bg-accent/50 border border-border/50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary/50 text-foreground placeholder:text-muted-foreground"
               data-ocid="feed.input"
             />
-            <div className="flex gap-2">
+            <div className="flex gap-2 mt-2">
               <Button
                 onClick={handleWithdraw}
                 disabled={requestWithdrawal.isPending}
@@ -344,13 +370,96 @@ export function FeedPage({ onReadArticle }: FeedPageProps) {
               variant="ghost"
               size="sm"
               className="w-full mt-2 text-xs text-muted-foreground hover:text-primary"
+              onClick={() => setShowHistory(true)}
               data-ocid="feed.button"
             >
+              <History className="w-3 h-3 mr-1" />
               View History <ChevronRight className="w-3 h-3 ml-1" />
             </Button>
           </div>
         </motion.div>
       </div>
+
+      {/* Withdrawal History Dialog */}
+      <Dialog open={showHistory} onOpenChange={setShowHistory}>
+        <DialogContent
+          className="sm:max-w-lg"
+          data-ocid="withdrawal_history.dialog"
+        >
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="w-4 h-4 text-primary" />
+              Withdrawal History
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[420px] pr-1">
+            {!withdrawals || withdrawals.length === 0 ? (
+              <div
+                className="flex flex-col items-center justify-center py-12 text-center"
+                data-ocid="withdrawal_history.empty_state"
+              >
+                <Wallet className="w-10 h-10 text-muted-foreground/30 mb-3" />
+                <p className="text-sm font-medium text-muted-foreground">
+                  No withdrawals yet
+                </p>
+                <p className="text-xs text-muted-foreground/60 mt-1">
+                  Your withdrawal requests will appear here
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3 py-1">
+                {withdrawals.map((w, i) => (
+                  <div
+                    key={w.id.toString()}
+                    className="rounded-xl border border-border/50 bg-accent/20 p-4"
+                    data-ocid={`withdrawal_history.item.${i + 1}`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-base font-bold text-primary">
+                          {Number(w.amount).toLocaleString()}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          coins
+                        </span>
+                      </div>
+                      <Badge
+                        variant="outline"
+                        className={`text-xs capitalize ${statusBadgeClass(w.status)}`}
+                      >
+                        {w.status}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span className="font-semibold text-foreground">
+                        {formatInr(coinsToInr(Number(w.amount)))} INR
+                      </span>
+                      <span>{formatDate(w.createdAt)}</span>
+                    </div>
+                    {w.bankAccountName && (
+                      <p className="text-xs text-muted-foreground mt-1.5 truncate">
+                        {w.bankAccountName}
+                        {w.bankAccountNumber
+                          ? ` · ···${w.bankAccountNumber.slice(-4)}`
+                          : ""}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full mt-1"
+            onClick={() => setShowHistory(false)}
+            data-ocid="withdrawal_history.close_button"
+          >
+            Close
+          </Button>
+        </DialogContent>
+      </Dialog>
 
       {/* Feed */}
       <section>

@@ -10,12 +10,12 @@ import Nat "mo:core/Nat";
 import Float "mo:core/Float";
 import Random "mo:core/Random";
 import Principal "mo:core/Principal";
-import Migration "migration";
+
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
 // Add migration with-clause
-(with migration = Migration.run)
+
 actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
