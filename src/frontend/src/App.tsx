@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import type { Article, UserRole } from "./backend.d";
 import { Footer } from "./components/Footer";
 import { Navbar } from "./components/Navbar";
+import { useActor } from "./hooks/useActor";
 import { useInternetIdentity } from "./hooks/useInternetIdentity";
 import {
   useInitializeAdmin,
@@ -32,28 +33,52 @@ import { LandingPage } from "./pages/LandingPage";
 
 export type Page = "feed" | "article" | "admin";
 
+const ADMIN_LOCAL_KEY = "newsearn_is_admin";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: { retry: 2, staleTime: 30_000 },
   },
 });
 
-function AdminSetupDialog() {
+function AdminSetupDialog({ onAdminGranted }: { onAdminGranted: () => void }) {
   const [open, setOpen] = useState(false);
   const [secret, setSecret] = useState("");
   const { mutate, isPending } = useInitializeAdmin();
+  const { actor } = useActor();
+
+  const tryGrantAdmin = () => {
+    // Check if already admin regardless
+    actor
+      ?.isCallerAdmin()
+      .then((isAdm: boolean) => {
+        if (isAdm) {
+          toast.success("Admin access confirmed!");
+          localStorage.setItem(ADMIN_LOCAL_KEY, "true");
+          setOpen(false);
+          setSecret("");
+          onAdminGranted();
+        } else {
+          toast.error("Invalid admin token. Please check and try again.");
+        }
+      })
+      .catch(() => {
+        toast.error("Invalid admin token. Please check and try again.");
+      });
+  };
 
   const handleClaim = () => {
     mutate(secret, {
       onSuccess: () => {
-        toast.success("Admin access granted! Reloading...");
+        toast.success("Admin access granted! Opening admin panel...");
+        localStorage.setItem(ADMIN_LOCAL_KEY, "true");
         setOpen(false);
         setSecret("");
-        // Reload so the admin tab appears immediately
-        setTimeout(() => window.location.reload(), 800);
+        onAdminGranted();
       },
       onError: () => {
-        toast.error("Invalid token or admin already assigned");
+        // Admin may already be assigned — verify via backend
+        tryGrantAdmin();
       },
     });
   };
@@ -75,8 +100,7 @@ function AdminSetupDialog() {
         <DialogHeader>
           <DialogTitle>Admin Setup</DialogTitle>
           <DialogDescription>
-            Enter the admin secret token to claim admin access. Only the first
-            person to enter the correct token becomes admin.
+            Enter the admin secret token to claim admin access.
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-3 py-2">
@@ -110,13 +134,29 @@ function AppContent() {
   const { identity, isInitializing } = useInternetIdentity();
   const [page, setPage] = useState<Page>("feed");
   const [activeArticle, setActiveArticle] = useState<Article | null>(null);
-  const { data: isAdmin } = useIsAdmin();
+  const [localAdmin, setLocalAdmin] = useState(
+    () => localStorage.getItem(ADMIN_LOCAL_KEY) === "true",
+  );
+  const { data: isAdminFromBackend } = useIsAdmin();
   const { data: userRole } = useUserRole();
   const registerUser = useRegisterUser();
   const hasTriedRegister = useRef(false);
 
+  const isAdmin = isAdminFromBackend === true || localAdmin;
+
   const isLoggedIn = !!identity;
 
+  // Sync backend admin status to local state
+  useEffect(() => {
+    if (isAdminFromBackend === true) {
+      localStorage.setItem(ADMIN_LOCAL_KEY, "true");
+      setLocalAdmin(true);
+    } else if (isAdminFromBackend === false && !localAdmin) {
+      localStorage.removeItem(ADMIN_LOCAL_KEY);
+    }
+  }, [isAdminFromBackend, localAdmin]);
+
+  // Auto-register new users
   useEffect(() => {
     if (
       isLoggedIn &&
@@ -162,6 +202,11 @@ function AppContent() {
     if (p !== "article") setActiveArticle(null);
   };
 
+  const handleAdminGranted = () => {
+    setLocalAdmin(true);
+    setPage("admin");
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar
@@ -184,7 +229,7 @@ function AppContent() {
       <Footer />
       {isLoggedIn && !isAdmin && (
         <div className="fixed bottom-4 right-4 z-50">
-          <AdminSetupDialog />
+          <AdminSetupDialog onAdminGranted={handleAdminGranted} />
         </div>
       )}
     </div>

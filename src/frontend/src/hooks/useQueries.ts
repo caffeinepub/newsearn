@@ -13,7 +13,7 @@ export function useGetNews(page = 0) {
     queryKey: ["news", page],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getNews(BigInt(page), BigInt(10));
+      return actor.getNews(BigInt(page), BigInt(250));
     },
     enabled: !!actor && !isFetching,
   });

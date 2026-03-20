@@ -459,7 +459,7 @@ export function AdminPage() {
           {/* Withdrawals tab */}
           <TabsContent value="withdrawals">
             <div
-              className="card-highlight rounded-xl border border-border/50 overflow-hidden"
+              className="card-highlight rounded-xl border border-border/50 overflow-x-auto"
               data-ocid="admin.table"
             >
               <Table>
@@ -476,7 +476,7 @@ export function AdminPage() {
                       Status
                     </TableHead>
                     <TableHead className="text-muted-foreground">
-                      Account Name
+                      Account Holder
                     </TableHead>
                     <TableHead className="text-muted-foreground">
                       Account No.
@@ -488,7 +488,7 @@ export function AdminPage() {
                       UPI ID
                     </TableHead>
                     <TableHead className="text-muted-foreground">
-                      Note
+                      Admin Note
                     </TableHead>
                     <TableHead className="text-muted-foreground text-right">
                       Actions
@@ -528,9 +528,29 @@ export function AdminPage() {
                             {w.status}
                           </Badge>
                         </TableCell>
+                        <TableCell className="text-sm">
+                          {w.bankAccountName || (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">
+                          {w.bankAccountNumber || (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">
+                          {w.ifscCode || (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {w.upiId || (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
                         <TableCell>
                           {w.status ===
-                            Variant_pending_approved_rejected.pending && (
+                          Variant_pending_approved_rejected.pending ? (
                             <Input
                               placeholder="Note..."
                               value={noteMap[w.id.toString()] ?? ""}
@@ -543,14 +563,11 @@ export function AdminPage() {
                               className="bg-accent/50 border-border/50 h-7 text-xs w-32"
                               data-ocid={`admin.input.${i + 1}`}
                             />
+                          ) : (
+                            <span className="text-xs text-muted-foreground">
+                              {w.note || "—"}
+                            </span>
                           )}
-                          {w.note &&
-                            w.status !==
-                              Variant_pending_approved_rejected.pending && (
-                              <span className="text-xs text-muted-foreground">
-                                {w.note}
-                              </span>
-                            )}
                         </TableCell>
                         <TableCell className="text-right">
                           {w.status ===
@@ -589,7 +606,7 @@ export function AdminPage() {
                         className="text-center text-muted-foreground py-10"
                         data-ocid="admin.empty_state"
                       >
-                        No withdrawal requests
+                        No withdrawal requests yet
                       </TableCell>
                     </TableRow>
                   )}
